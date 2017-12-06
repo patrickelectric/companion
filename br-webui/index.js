@@ -90,7 +90,7 @@ for (var i = 0; ;i++) {
 		// TODO put this in driver layer
 		cam.controls.forEach(function(control) {
 			if (control.type != "class") {
-				control.value = cam.controlGet(control.id);
+				control.value = cam.controlGet(control.id); // store all the current values locally so that we can update the frontend
 				logger.log("getting control:", control.name, control.type, control.value);
 				// HACK, some v4l2 devices report bogus default values that are way beyond
 				// min/max range, so we need to record what the default value actually is
@@ -99,7 +99,16 @@ for (var i = 0; ;i++) {
 			}
 		});
 		
-		_cameras.push(cam);
+		var has_h264 = false;
+		cam.formats.forEach(function(format) {
+			if (format.formatName == "H264") {
+				has_h264 = true;
+			}
+		});
+		
+		if (has_h264) {
+			_cameras.push(cam);
+		}
 	} catch(err) { // this is thrown once /dev/video<i> does not exist, we have enumerated all of the cameras
 		old_cameras.forEach(function(oldcam) { // Configure cameras to match last known/used settings
 			_cameras.forEach(function(cam) {
