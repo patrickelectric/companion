@@ -1038,10 +1038,6 @@ io.on('connection', function(socket) {
 				logger.log(err.toString());
 			});
 			
-			// Save current format
-			var file_path = "/home/pi/vidformat.param";
-			fs.writeFileSync(file_path, profile.width + "\n" + profile.height + "\n" + profile.frameRate + "\n" + profile.device);
-			
 		} catch(err) {
 			logger.log("Error setting v4l2 format:", err);
 		}
@@ -1167,15 +1163,6 @@ io.on('connection', function(socket) {
 					logger.log(err);
 				}
 				logger.log("The file was saved!", camera_settings_path);
-			});
-			
-			file_path = "/home/pi/vidformat.param";
-			
-			fs.writeFile(file_path, data.width + "\n" + data.height + "\n" + data.interval.denominator + "\n" + data.id, function(err) {
-				if(err) {
-					logger.log(err);
-				}
-				logger.log("The file was saved!", file_path);
 			});
 			
 		} catch(err) {
