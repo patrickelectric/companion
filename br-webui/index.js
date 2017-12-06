@@ -96,6 +96,11 @@ for (var i = 0; ;i++) {
 				// min/max range, so we need to record what the default value actually is
 				// The cameras that I have seen 
 				control.default = control.value;
+				
+				// HACK, bogus max on rpi cam
+				if (control.name == "H264 I-Frame Period" && control.max > 2000000) {
+					control.max = 120;
+				}
 			}
 		});
 		
