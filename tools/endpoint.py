@@ -294,4 +294,3 @@ def load(filename):
 		
 		except Exception as e:
 			print(e)
-			pass
