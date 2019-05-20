@@ -77,8 +77,8 @@ sockit = waitConnection()
 # setup gps type parameter
 system('screen -S mavproxy -p 0 -X stuff "param set GPS_TYPE 14^M"')
 
-while True:
-    
+while sockit:
+
     time.sleep(0.05) # 20 Hz update once connected
 
     try:
