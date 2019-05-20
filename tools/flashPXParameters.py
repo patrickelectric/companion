@@ -1,12 +1,9 @@
 #!/usr/bin/python
 
 import platform
-import csv
 import time
 import os
 from pymavlink import mavutil
-from pymavlink.dialects.v10 import common as mavlink
-from pymavlink import mavparm
 from optparse import OptionParser
 home = os.environ['HOME']
 timeout = 1
