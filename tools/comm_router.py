@@ -17,7 +17,6 @@ try:
 except Exception as e:
     print 'error loading configuration'
     print e
-    pass
 
 # we will listen here for requests
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
