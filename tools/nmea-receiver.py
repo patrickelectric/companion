@@ -54,25 +54,23 @@ last_output_t = 0;
 
 # wait for connection
 def waitConnection():
-	while True:
-	    try:
-		sockit, addr = sockitTcp.accept()
-		print("TCP connected!")
-                return sockit
-		break
-	    except:
-		print("TCP not connected, waiting for data")
+    while True:
+        try:
+            sockit, addr = sockitTcp.accept()
+            print("TCP connected!")
+            return sockit
+        except:
+            print("TCP not connected, waiting for data")
 
-	    try:
-		sockitUdp.recvfrom(4096)
-		sockit = sockitUdp
-		print("UDP connected!")
-                return sockitUdp
-		break
-	    except:
-		print("UDP not connected, waiting for data")
+        try:
+            sockitUdp.recvfrom(4096)
+            sockit = sockitUdp
+            print("UDP connected!")
+            return sockitUdp
+        except:
+            print("UDP not connected, waiting for data")
 
-	    time.sleep(1) # 1 Hz update before connected
+        time.sleep(1) # 1 Hz update before connected
 
 sockit = waitConnection()
 
