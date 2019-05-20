@@ -738,7 +738,7 @@ networking.on('connection', function(socket) {
 				} else {
 					var fields = stdout.split("\n");
 					for (var i in fields) {
-						line = fields[i].split("=");
+						var line = fields[i].split("=");
 						if (line[0] == "ssid") {
 							var ssid = line[1];
 						} else if (line[0] == "ip_address") {
@@ -772,10 +772,9 @@ function updateInternetStatus(should_log) {
 		if (should_log) {
 			logger.log("ping -c1 fast.com : ", error + stdout + stderr);
 		}
+		var _internet_connected = true;
 		if (error) {
 			_internet_connected = false;
-		} else {
-			_internet_connected = true;
 		}
 		io.emit('internet status', _internet_connected);
 	});
@@ -799,7 +798,7 @@ function updateCPUStats () {
 	cpu_stats.cpu_status    = ""
 	// Get cpu status
 	getCpuStatus(function(status) {
-		throttled = status.split("=");
+		var throttled = status.split("=");
 
 		// If command fail, return no status
 		if (throttled[0] != "throttled") {
@@ -809,7 +808,7 @@ function updateCPUStats () {
 		}
 
 		// Decode command
-		throttled_code = parseInt(throttled[1]);
+		var throttled_code = parseInt(throttled[1]);
 
 		if (!throttled_code) {
 			cpu_stats.cpu_status = "OK";
@@ -1558,8 +1557,8 @@ io.on('connection', function(socket) {
 			var devices = [];
 			
 			var lines = stdout.split("\n");
-			for (line in lines) {
-				device = lines[line];
+			for (var line in lines) {
+				var device = lines[line];
 				logger.log('line', device);
 				logger.log(device.indexOf("Ping1D-id-"));
 				if (device.indexOf("Ping1D-id-") > -1) {
