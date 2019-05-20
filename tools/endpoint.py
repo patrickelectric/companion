@@ -2,7 +2,6 @@
 
 import serial
 import socket
-import time
 import json
 
 debug = False
