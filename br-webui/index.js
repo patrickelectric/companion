@@ -5,7 +5,6 @@ const dgram = require('dgram');
 const SocketIOFile = require('socket.io-file');
 var logger = require('tracer').console();
 var os = require("os");
-var env = process.env
 var home_dir = process.env.HOME
 logger.log('ENVIRONMENT', process.env)
 logger.log('COMPANION_DIR', process.env.COMPANION_DIR)
@@ -244,9 +243,7 @@ app.post('/test', function(req, res) {
 	//console.log("Dealing with: ", module);
 	res.set('Content-Type', 'text/html; charset=UTF-8');
 	res.set('Connection', 'close');
-	
-	var body = ''
-	
+
 	var length = 0;
 	
 	if (module && module == 'upload') {
