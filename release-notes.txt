@@ -105,3 +105,14 @@ Initial release
 - Update download link for development firmware (.apj)
 - Updates to ping1d_mavlink_driver.py
 - Bugfix camera settings are not saved/loaded correctly
+
+0.0.18:
+
+- Fix download link for ardusub beta firmware
+- Fix underwater GPS bug when if no orientation data is received
+- Fix ping protocol installation issue
+- Update ping protocol to 0.0.9
+- Increase mavlink stream rate to 20Hz
+- Improve website visual feedback
+- Add Ping360 support
+- Add companion status in main page
