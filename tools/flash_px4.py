@@ -22,7 +22,7 @@ parser.add_option("--latest",action="store_true",dest="latest",default=False,hel
 if options.fromStdin:
                 # Get firmware from stdin if possible
                 print "Trying to read file from stdin..."
-                
+
                 signal.signal(signal.SIGALRM, timeout)
                 signal.alarm(5)
                 fileIn = sys.stdin.read()
@@ -32,7 +32,7 @@ if options.fromStdin:
                                 file = open("/tmp/ArduSub-v2.px4","w")
                                 file.write(fileIn)
                                 file.close()
-                                print "Got firmware file from stdin!"      
+                                print "Got firmware file from stdin!"
                 else:
                                 error("Read error on stdin!")
 elif options.file is not None:
@@ -53,20 +53,20 @@ else:
                 else:
                                 firmwareURL = "http://firmware.ardupilot.org/Sub/stable/PX4/ArduSub-v2.px4"
                                 print "Downloading stable ArduSub firmware from %s" % firmwareURL
-                
+
                 try:
                                 firmwarefile = urlopen(firmwareURL)
                                 with open("/tmp/ArduSub-v2.px4", "wb") as local_file:
                                     local_file.write(firmwarefile.read())
-                                    
+
                                 local_file.close()
-                
+
                 except Exception as e:
                                 print(e)
                                 print "Error downloading firmware! Do you have an internet connection? Try 'ping ardusub.com'"
                                 exit(1)
-                                
-                
+
+
 # Stop screen session with mavproxy
 print "Stopping mavproxy"
 os.system("screen -X -S mavproxy quit")
@@ -85,7 +85,7 @@ else:
     "/tmp/ArduSub-v2.px4") != 0):
                 print "Error flashing pixhawk! Do you have most recent version of companion? Try 'git pull' or scp."
                 exit(1)
-                
+
 
 # Wait a few seconds
 print "Waiting to restart mavproxy..."
