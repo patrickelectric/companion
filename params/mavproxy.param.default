@@ -3,6 +3,7 @@
 --source-system=200
 --cmd="set heartbeat 0"
 --out udpin:localhost:9000
+--out udpin:0.0.0.0:14660
 --out udpbcast:192.168.2.255:14550
 --mav20
 --aircraft telemetry
