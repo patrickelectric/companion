@@ -96,7 +96,7 @@ master.close()
 print("waiting for %s to drop..." % port)
 while not os.system("ls " + port + " > /dev/null 2>&1"):
     time.sleep(0.1)
-    
+
 print("waiting for connection to %s..." % port)
 while os.system("ls " + port + " > /dev/null 2>&1"):
     time.sleep(0.1)
@@ -122,16 +122,16 @@ with open(filename,'r') as f:
         line = line.split(',')
         name = line[0]
         value = float(line[1])
-        
+
         verified = False
         attempts = 0
-        
+
         print("Sending " + name + " = " + str(value) + "\t\t\t"),
-        
+
         while not verified and attempts < 3:
             master.param_set_send(name,value)
             start = time.time()
-                        
+
             while time.time() < start + timeout:
                 msg = master.recv_match()
                 if msg is not None:
@@ -140,9 +140,9 @@ with open(filename,'r') as f:
                         verified = True
                         break
                 time.sleep(0.01)
-                
+
             attempts = attempts + 1
-            
+
         if not verified:
             print(" FAIL!")
             failed.append(name)
