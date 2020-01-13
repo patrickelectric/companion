@@ -2,14 +2,14 @@
 
 '''
 Print a json with information about usb/udev devices. The devices are selected using
-an input --pattern. This program will return a json describing the usb devices according 
-to the command `udevadm info <device>`. Information is collected for each udev device 
+an input --pattern. This program will return a json describing the usb devices according
+to the command `udevadm info <device>`. Information is collected for each udev device
 matching the input pattern.
 
 ex. `python3 query-udevadm.py --pattern=/dev/video*`
 `python3 query-udevadm.py --pattern=/dev/disk/by-id/* --indent=2`
 
-The patterns are matched according to the python glob module. This only provides support 
+The patterns are matched according to the python glob module. This only provides support
 for simple unix style patterns.
 
 See also, for example, (or similar):
@@ -26,7 +26,7 @@ The json format is:
                     ...
                 }
             },
-            ... 
+            ...
         ]
     }
 }
@@ -142,7 +142,7 @@ for device in devices:
 
     # udev attributes
     deviceInfo["udevInfo"] = udevInfo
-    
+
     # search for known device attributes from list of known devices
     for familiarDevice, identifiers in companionFamiliarDevices.items():
         # dictionary of identifying udev attributes/values for this device
