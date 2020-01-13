@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import os
-from time import sleep 
+from time import sleep
 import sys
 home = os.environ['HOME']
 
