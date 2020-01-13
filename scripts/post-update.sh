@@ -299,6 +299,22 @@ if (( $PRE_0_0_19 > 0 )); then
 
     # Use the last version of bluerobotics-ping
     sudo pip install bluerobotics-ping==0.0.10 --upgrade --force-reinstall
+
+    ## Navigator
+    # Remove any configuration related to i2c and spi/spi1 and do the necessary changes for navigator
+    for STRING in "dtparam=i2c_arm=" "dtparam=spi=" "dtoverlay=spi1" "dtoverlay=uart1"; do
+        sudo sed -i "/$STRING/d" /boot/config.txt
+    done
+    for STRING in "dtparam=i2c_arm=on" "dtparam=spi=on" "dtoverlay=spi1-3cs" "dtoverlay=uart1"; do
+        echo "$STRING" | sudo tee -a /boot/config.txt
+    done
+
+    # Install i2c tools
+    sudo apt update --yes
+    sudo apt install i2c-tools --yes
+
+    # Install socat to create bind between /dev/navigator and /dev/autopilot
+    sudo apt install socat --yes
 fi
 
 echo 'Update Complete, refresh your browser'
