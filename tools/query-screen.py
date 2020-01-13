@@ -3,7 +3,7 @@
 '''
 Print a json with information about screens that are running for a given user.
 Most of the services offered by Blue Robotics companion are run as background
-command line processes. These commands/services are running under detached 
+command line processes. These commands/services are running under detached
 screens. This program will return a json describing the screen ids and names
 for a given user.
 
@@ -48,7 +48,7 @@ To issue a command on a detached screen, use `-X` and the command you want to en
 `screen -S <screenName> -X <command>`
 ex `screen -S myScreen -X quit`
 
-To exit (terminate) an attached screen session, enter command mode, and type `quit`, 
+To exit (terminate) an attached screen session, enter command mode, and type `quit`,
 then press `<enter>`.
 
 See `man screen` for more information.
