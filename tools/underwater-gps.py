@@ -125,6 +125,10 @@ gpsUrl = "http://" + args.ip + ":" + args.port
 def processMasterPosition(response, *args, **kwargs):
     print('got master response:', response.text)
     result = response.json()
+    if 'lat' not in result or 'lon' not in result or 'orientation' not in result:
+        print('master response is not valid:')
+        print(json.dumps(result, indent=4, sort_keys=True))
+        return
 
     # Old approach, mavlink messages to port 14400
     master.mav.heartbeat_send(
@@ -168,6 +172,11 @@ def processMasterPosition(response, *args, **kwargs):
 def processLocatorPosition(response, *args, **kwargs):
     print('got global response:', response.text)
     result = response.json()
+    if 'lat' not in result or 'lon' not in result:
+        print('global response is not valid:')
+        print(json.dumps(result, indent=4, sort_keys=True))
+        return
+
     result['lat'] = result['lat'] * 1e7
     result['lon'] = result['lon'] * 1e7
     result['fix_type'] = 3
@@ -206,6 +215,10 @@ while True:
     try:
         datagram = sockit.recvfrom(4096)
         recv_payload = json.loads(datagram[0])
+        if 'depth' not in recv_payload or 'temp' not in recv_payload:
+            print('not valid payload:')
+            print(json.dumps(recv_payload, indent=4, sort_keys=True))
+            continue
 
         # Send depth/temp to external/depth api
         ext_depth = {}
