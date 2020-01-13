@@ -177,9 +177,9 @@ def processLocatorPosition(response, *args, **kwargs):
     result['ignore_flags'] = 8 | 16 | 32
     result = json.dumps(result);
     print('sending      ', result)
-    
+
     sockit.sendto(result, ('0.0.0.0', 25100))
-    
+
 def notifyPutResponse(response, *args, **kwargs):
     print('PUT response:', response.text)
 
@@ -195,46 +195,46 @@ while True:
         print('requesting data from', url)
         request = grequests.get(url, session=s, hooks={'response': processLocatorPosition})
         job = grequests.send(request)
-        
+
     if time.time() > last_master_update + update_period:
         last_master_update = time.time()
         url = gpsUrl + "/api/v1/position/master"
         print('requesting data from', url)
         request = grequests.get(url, session=s, hooks={'response': processMasterPosition})
         job = grequests.send(request)
-    
+
     try:
         datagram = sockit.recvfrom(4096)
         recv_payload = json.loads(datagram[0])
-        
+
         # Send depth/temp to external/depth api
         ext_depth = {}
         ext_depth['depth'] = max(min(100, recv_payload['depth']), 0)
         ext_depth['temp'] = max(min(100, recv_payload['temp']), 0)
-        
+
         send_payload = json.dumps(ext_depth)
-        
+
         headers = {'Content-type': 'application/json'}
-        
+
         url = gpsUrl + "/api/v1/external/depth"
         print('sending', send_payload, 'to', url)
-        
+
         # Equivalent
         # curl -X PUT -H "Content-Type: application/json" -d '{"depth":1,"temp":2}' "http://37.139.8.112:8000/api/v1/external/depth"
         request = grequests.put(url, session=s, headers=headers, data=send_payload, hooks={'response': notifyPutResponse})
         grequests.send(request)
-        
+
         # Send heading to external/orientation api
         ext_orientation = {}
         ext_orientation['orientation'] = max(min(360, recv_payload['orientation']), 0)
-        
+
         send_payload = json.dumps(ext_orientation)
-        
+
         headers = {'Content-type': 'application/json'}
-        
+
         url = gpsUrl + "/api/v1/external/orientation"
         print('sending', send_payload, 'to', url)
-        
+
         request = grequests.put(url, session=s, headers=headers, data=send_payload, hooks={'response': notifyPutResponse})
         grequests.send(request)
 
