@@ -36,7 +36,12 @@ class PingEnumerator:
         device was not detected
         """
 
-        ping = PingDevice("/dev/serial/by-id/" + dev, 115200)
+        try:
+            ping = PingDevice("/dev/serial/by-id/" + dev, 115200)
+        except Exception as exception:
+            print("An exception has occurred: ", exception)
+            return None
+
         if not ping.initialize():
             return None
 
