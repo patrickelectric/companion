@@ -116,3 +116,14 @@ Initial release
 - Improve website visual feedback
 - Add Ping360 support
 - Add companion status in main page
+
+0.0.19:
+
+- Add MAVLink REST API under http://192.168.2.2:4777/mavlink
+- Add ping-viewer MAVLink output for ping360 orientation feature
+- Add reboot after companion system update step
+- Add Navigator board support
+- Enable Raspberry hardware I²C, SPI and Serial ports
+- Mavlink streamrate decreased to avoid high CPU usages
+- Fix problem related to underwater-gps loss of position
+- Fix bug when upgrading Ping devices
