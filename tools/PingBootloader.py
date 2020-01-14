@@ -15,7 +15,7 @@
 # we shut down the proxy before communicating with the device
 # then restart the proxy when we are finished
 
-from brping import Ping1D, PingMessage, pingmessage
+from brping import Ping1D, PingMessage, definitions
 import platform
 import time
 import os
@@ -48,7 +48,7 @@ if myPing.initialize() is False:
 
 # send ping device to bootloader
 print("Sending device to bootloader...")
-bootloader_msg = PingMessage(pingmessage.PING1D_GOTO_BOOTLOADER)
+bootloader_msg = PingMessage(definitions.PING1D_GOTO_BOOTLOADER)
 bootloader_msg.pack_msg_data()
 myPing.iodev.write(bootloader_msg.msg_data)
 
