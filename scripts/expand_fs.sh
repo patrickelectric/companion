@@ -49,8 +49,8 @@ get_variables () {
 get_variables
 
 if ! parted -m "$ROOT_DEV" u s resizepart "$ROOT_PART_NUM" "$TARGET_END"; then
-	FAIL_REASON="Root partition resize failed"
-	return 1
+    FAIL_REASON="Root partition resize failed"
+    return 1
 fi
 
 resize2fs -p $ROOT_PART_DEV
