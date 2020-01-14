@@ -203,14 +203,14 @@ while True:
         url = gpsUrl + "/api/v1/position/global"
         print('requesting data from', url)
         request = grequests.get(url, session=s, hooks={'response': processLocatorPosition})
-        job = grequests.send(request)
+        grequests.send(request)
 
     if time.time() > last_master_update + update_period:
         last_master_update = time.time()
         url = gpsUrl + "/api/v1/position/master"
         print('requesting data from', url)
         request = grequests.get(url, session=s, hooks={'response': processMasterPosition})
-        job = grequests.send(request)
+        grequests.send(request)
 
     try:
         datagram = sockit.recvfrom(4096)
