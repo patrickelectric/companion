@@ -21,12 +21,12 @@ file.close()
 delay = 1.0/args.frequency
 
 if args.tcp:
-	sockit = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sockit.connect((args.ip, args.port))
+    sockit = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sockit.connect((args.ip, args.port))
 else:
-	sockit = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	sockit.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	sockit.setblocking(False)
+    sockit = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sockit.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sockit.setblocking(False)
 
 
 while True:
