@@ -60,6 +60,7 @@ cd gstreamer
 [ ! -d gst-libav ] && git clone git://anongit.freedesktop.org/git/gstreamer/gst-libav
 [ ! -d gst-omx ] && git clone git://anongit.freedesktop.org/git/gstreamer/gst-omx
 [ ! -d gst-python ] && git clone git://anongit.freedesktop.org/git/gstreamer/gst-python
+[ ! -d gst-rtsp-server ] && git clone git://anongit.freedesktop.org/git/gstreamer/gst-rtsp-server
 #[ ! $RPI ] && [ ! -d gstreamer-vaapi ] && git clone git://gitorious.org/vaapi/gstreamer-vaapi.git
 
 export LD_LIBRARY_PATH=/usr/local/lib/
@@ -170,6 +171,15 @@ if [[ $RPI -ne 1 ]]; then
     sudo make -j4 install
     cd ..
 fi
+
+cd gst-rtsp-server
+git checkout -t origin/$BRANCH || true
+sudo make -j4 uninstall || true
+git pull
+./autogen.sh --disable-gtk-doc
+make -j4
+sudo make -j4 install
+cd ..
 
 sudo rm -rf $HOME/src
 
