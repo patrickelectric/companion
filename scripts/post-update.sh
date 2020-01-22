@@ -327,6 +327,35 @@ if (( $PRE_0_0_19 > 0 )); then
     # The user should apply the default parameters if he wishs to use all features available
 fi
 
+
+# Check pre-0.0.20 to update DHCP server and RTSP video
+PRE_0_0_20=$(( git rev-list --count --left-right 0.0.19...revert-point || echo 0 ) | cut -f1)
+
+if (( $PRE_0_0_19 > 0 )); then
+    # camera-manager
+    ## Install libavahi
+    sudo apt install libavahi-glib-dev libavahi-core-dev --yes
+
+    ## Install gst-rtsp-server
+    cd /tmp
+    [ ! -d gst-rtsp-server ] && git clone git://anongit.freedesktop.org/git/gstreamer/gst-rtsp-server
+    cd gst-rtsp-server
+    git checkout -t origin/1.8
+    git pull
+    ./autogen.sh --disable-gtk-doc
+    make -j4
+    sudo make -j4 install
+    cd ~/companion
+
+    ## Install cargo
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
+
+    # Install ardupilot-camera-manager
+    cargo --version
+fi
+
+
+
 echo 'Update Complete, the system will reboot now.'
 echo 'Wait for 30 seconds and refresh the page.'
 
