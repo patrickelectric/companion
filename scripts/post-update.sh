@@ -332,6 +332,9 @@ fi
 PRE_0_0_20=$(( git rev-list --count --left-right 0.0.19...revert-point || echo 0 ) | cut -f1)
 
 if (( $PRE_0_0_19 > 0 )); then
+    # Enable DHCP server by default
+    echo "config-server" > /home/pi/network.conf
+
     # camera-manager
     ## Install libavahi
     sudo apt install libavahi-glib-dev libavahi-core-dev --yes
