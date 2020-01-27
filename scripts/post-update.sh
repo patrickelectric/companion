@@ -352,6 +352,7 @@ if (( $PRE_0_0_19 > 0 )); then
 
     ## Install cargo
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
+    # We can't call 'source $HOME/.cargo/env' since it'll erase all variables
     export PATH="$HOME/.cargo/bin:$PATH"
 
     # Install ardupilot-camera-manager
