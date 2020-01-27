@@ -295,8 +295,6 @@ fi
 PRE_0_0_19=$(( git rev-list --count --left-right 0.0.18...revert-point || echo 0 ) | cut -f1)
 
 if (( $PRE_0_0_19 > 0 )); then
-    echo "config-server" > /home/pi/network.conf
-
     # Use the last version of bluerobotics-ping
     sudo pip install bluerobotics-ping==0.0.10 --upgrade --force-reinstall
 
