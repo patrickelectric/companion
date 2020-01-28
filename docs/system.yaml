@@ -100,8 +100,18 @@ definitions:
         type: "string"
         example: "2.5GB/14.4GB (19% used)"
       cpustatus:
-        type: "string"
-        example: "over-voltage ocurred"
+        type: array
+        items:
+          type: object
+          properties:
+            event:
+              type: string
+              example: "over-voltage"
+              description: "Event type."
+            time:
+              type: "string"
+              example: "2001-07-08T00:34:60.026490+09:30"
+              description: "ISO 8601 / RFC 3339 date & time format."
   service:
     type: "string"
     example: "webui"
