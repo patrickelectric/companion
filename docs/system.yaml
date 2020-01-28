@@ -109,8 +109,24 @@ definitions:
               example: "2001-07-08T00:34:60.026490+09:30"
               description: "ISO 8601 / RFC 3339 date & time format."
   service:
-    type: "string"
-    example: "webui"
+    type: object
+    properties:
+      event:
+        type: string
+        example: "ping-proxy"
+        description: "Running service."
+      timestamp:
+        type: integer
+        example: 100
+        description: "Time that the service is running in seconds."
+      cpu:
+        type: number
+        example: 2.5
+        description: "CPU percentage allocated for this service."
+      ram:
+        type: number
+        example: 0.9
+        description: "RAM percentage allocated for this service."
 
   devicelist:
     type: "object"
