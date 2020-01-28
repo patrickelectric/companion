@@ -93,7 +93,7 @@ def format(message, now=0, lat=0, lon=0, orientation=0):
 
 
 # Old mavlink link, used in BR QGC up to 3.2.4-rev6
-master = mavutil.mavlink_connection('udpbcast:192.168.2.255:14400', source_system=2, source_component=1)
+master = mavutil.mavlink_connection('udpout:192.168.2.1:14400', source_system=2, source_component=1)
 
 parser = argparse.ArgumentParser(description="Driver for the Water Linked Underwater GPS system.")
 parser.add_argument('--ip', action="store", type=str, default="demo.waterlinked.com", help="remote ip to query on.")
@@ -165,7 +165,7 @@ def processMasterPosition(response, *args, **kwargs):
         result = response.json()
         for message in [gpgga, gprmc, gpvtg]:
             msg = format(message, datetime.now(), result['lat'], result['lon'], orientation=result['orientation'])
-            qgcNmeaSocket.sendto(msg, ('192.168.2.255', 14401))
+            qgcNmeaSocket.sendto(msg, ('192.168.2.1', 14401))
     except Exception as e:
         print(e)
 
