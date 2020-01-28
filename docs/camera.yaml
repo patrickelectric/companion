@@ -2,127 +2,118 @@ paths:
   /camera/pipeline:
     get:
       tags:
-       - "camera"
-      summary: "Get the GStreamer pipeline currently in use"
-      description: "Get the GStreamer pipeline currently in use"
-      operationId: "readPipeline"
-      produces:
-      - "application/json"
+        - camera
+      summary: Get the GStreamer pipeline currently in use
+      description: Get the GStreamer pipeline currently in use
+      operationId: readPipeline
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: string
-            example: | 
-                      ! h264parse
-                      ! queue
-                      ! rtph264pay config-interval=10 pt=96
-                      ! udpsink host=192.168.2.255 port=5600
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                example: |
+                  ! h264parse
+                  ! queue
+                  ! rtph264pay config-interval=10 pt=96
+                  ! udpsink host=192.168.2.255 port=5600
         500:
-          description: "Error reading pipeline"
-    
+          description: Error reading pipeline
     post:
       tags:
-       - "camera"
-      summary: "Set a new GStreamer pipeline to use"
-      description: "Set a new GStreamer pipeline to use. It should start with a 'h264parse' element."
-      operationId: "writePipeline"
-      produces:
-      - "application/json"
+        - camera
+      summary: Set a new GStreamer pipeline to use
+      description: Set a new GStreamer pipeline to use. It should start with a 'h264parse'
+        element.
+      operationId: writePipeline
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: string
-            example: | 
-                      ! h264parse
-                      ! queue
-                      ! rtph264pay config-interval=10 pt=96
-                      ! udpsink host=192.168.2.255 port=5600
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                example: |
+                  ! h264parse
+                  ! queue
+                  ! rtph264pay config-interval=10 pt=96
+                  ! udpsink host=192.168.2.255 port=5600
         500:
-          description: "Error writing pipeline"
-  
+          description: Error writing pipeline
   /camera/getV4L2cameras:
     get:
       tags:
-       - "camera"
-      summary: "Get a List of available cameras via the V4L2 interface"
-      description: "Get the GStreamer pipeline currently in use"
-      operationId: "readV4L2Cameras"
-      produces:
-      - "application/json"
+        - camera
+      summary: Get a List of available cameras via the V4L2 interface
+      description: Get the GStreamer pipeline currently in use
+      operationId: readV4L2Cameras
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: string
-            example: TO-DO
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                example: TO-DO
         500:
-          description: "Error getting cameras list"
-  
+          description: Error getting cameras list
   /camera/profiles:
     get:
       tags:
-       - "camera"
-      summary: "Get a List of available cameras via the V4L2 interface"
-      description: "Get the GStreamer pipeline currently in use"
-      operationId: "readV4L2profiles"
-      produces:
-      - "application/json"
+        - camera
+      summary: Get a List of available cameras via the V4L2 interface
+      description: Get the GStreamer pipeline currently in use
+      operationId: readV4L2profiles
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: string
-            example: TO-DO
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                example: TO-DO
         500:
-          description: "Error reading profiles"
-
-  
+          description: Error reading profiles
   /camera/V4l2Control:
     get:
       tags:
-       - "camera"
-      summary: "Get a List of available V4L2 Controls for the current camera"
-      description: "Get the GStreamer pipeline currently in use"
-      operationId: "readV4L2controls"
-      produces:
-      - "application/json"
+        - camera
+      summary: Get a List of available V4L2 Controls for the current camera
+      description: Get the GStreamer pipeline currently in use
+      operationId: readV4L2controls
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: string
-            example: TO-DO
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                example: TO-DO
         500:
-          description: "Error reading v4l2 controls"
-
+          description: Error reading v4l2 controls
     post:
       tags:
-       - "camera"
-      summary: "Get a List of available cameras via the V4L2 interface"
-      description: "Get the GStreamer pipeline currently in use"
-      operationId: "setV4L2Controls"
-      produces:
-      - "application/json"
-      consumes:
-        - application/json
-      parameters:
-        - in: body
-          name: control
-          description: The network to connect to.
-          schema:
-            type: object
-            required:
-              - id
-              - value
-            properties:
-              id:
-                type: integer
-              value:
-                type: string
+        - camera
+      summary: Get a List of available cameras via the V4L2 interface
+      description: Get the GStreamer pipeline currently in use
+      operationId: setV4L2Controls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - value
+              properties:
+                id:
+                  type: integer
+                value:
+                  type: string
+        description: The network to connect to.
       responses:
         200:
-          description: "successful operation"
+          description: successful operation
         500:
-          description: "Error setting control"
+          description: Error setting control

@@ -2,147 +2,146 @@ paths:
   /system/status:
     get:
       tags:
-      - "system"
-      summary: "Read Companion system status"
-      description: "Read CPU, Disk and RAM status of the companion computer"
-      operationId: "readStatus"
-      produces:
-      - "application/json"
+        - system
+      summary: Read Companion system status
+      description: Read CPU, Disk and RAM status of the companion computer
+      operationId: readStatus
       responses:
         200:
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/status"
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status"
         500:
-          description: "Error reading system data"
-
+          description: Error reading system data
   /system/services:
     get:
       tags:
-       - "system"
-      summary: "Read Companion system running services"
-      description: "Read CPU, Disk and RAM status of the companion computer"
-      operationId: "readServices"
-      produces:
-      - "application/json"
+        - system
+      summary: Read Companion system running services
+      description: Read CPU, Disk and RAM status of the companion computer
+      operationId: readServices
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/service"
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/service"
         500:
-          description: "Error reading system services"
-
+          description: Error reading system services
   /system/devices:
     get:
       tags:
-       - "system"
-      summary: "Read Companion system detected devices"
-      description: "Read CPU, Disk and RAM status of the companion computer"
-      operationId: "readDevices"
-      produces:
-      - "application/json"
+        - system
+      summary: Read Companion system detected devices
+      description: Read CPU, Disk and RAM status of the companion computer
+      operationId: readDevices
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: "object"
-            items:
-              $ref: "#/definitions/devicelist"
-            example:
-              audio: []
-              video:
-                - bcm2835-codec-isp
-              serial:
-                - fmuv2
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/devicelist"
+                example:
+                  audio: []
+                  video:
+                    - bcm2835-codec-isp
+                  serial:
+                    - fmuv2
         500:
-          description: "Error reading system services"
-  
+          description: Error reading system services
   /system/version:
     get:
       tags:
-      - "system"
-      summary: "Read Companion system version"
-      description: "Read version of companion or git hash if current commit is not tagged"
-      operationId: "readVersion"
-      produces:
-      - "application/json"
+        - system
+      summary: Read Companion system version
+      description: Read version of companion or git hash if current commit is not tagged
+      operationId: readVersion
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: string
-            example: 0.0.19-14-g9aa6f65
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                example: 0.0.19-14-g9aa6f65
         500:
-          description: "Error reading system version"
+          description: Error reading system version
 
-definitions:
-  status:
-    type: "object"
-    properties:
-      cpuload:
-        type: "number"
-        example: 5.2
-        description: "Cpu load in % of all cores"
-      uptime:
-        type: "string"
-        example: "5 days, 20 hours, 41 minutes"
-      ram:
-        type: "string"
-        example: "596MB/926MB (64% used)"
-      disk:
-        type: "string"
-        example: "2.5GB/14.4GB (19% used)"
-      cpustatus:
-        type: array
-        items:
-          type: object
-          properties:
-            event:
-              type: string
-              example: "over-voltage"
-              description: "Event type."
-            time:
-              type: "string"
-              example: "2001-07-08T00:34:60.026490+09:30"
-              description: "ISO 8601 / RFC 3339 date & time format."
-  service:
-    type: object
-    properties:
-      event:
-        type: string
-        example: "ping-proxy"
-        description: "Running service."
-      timestamp:
-        type: integer
-        example: 100
-        description: "Time that the service is running in seconds."
-      cpu:
-        type: number
-        example: 2.5
-        description: "CPU percentage allocated for this service."
-      ram:
-        type: number
-        example: 0.9
-        description: "RAM percentage allocated for this service."
+components:
+  schemas:
+    status:
+      type: "object"
+      properties:
+        cpuload:
+          type: "number"
+          example: 5.2
+          description: "Cpu load in % of all cores"
+        uptime:
+          type: "string"
+          example: "5 days, 20 hours, 41 minutes"
+        ram:
+          type: "string"
+          example: "596MB/926MB (64% used)"
+        disk:
+          type: "string"
+          example: "2.5GB/14.4GB (19% used)"
+        cpustatus:
+          type: array
+          items:
+            type: object
+            properties:
+              event:
+                type: string
+                example: "over-voltage"
+                description: "Event type."
+              time:
+                type: "string"
+                example: "2001-07-08T00:34:60.026490+09:30"
+                description: "ISO 8601 / RFC 3339 date & time format."
 
-  devicelist:
-    type: "object"
-    properties:
-      audio:
-        type: array
-        items:
+    service:
+      type: object
+      properties:
+        event:
           type: string
-        example: ["a", "b"]
-      video:
-        type: array
-        items:
-          type: string
-        example: ["a", "b"]
-      serial:
-        type: array
-        items:
-          type: string
-        example: ["a", "b"]
+          example: "ping-proxy"
+          description: "Running service."
+        timestamp:
+          type: integer
+          example: 100
+          description: "Time that the service is running in seconds."
+        cpu:
+          type: number
+          example: 2.5
+          description: "CPU percentage allocated for this service."
+        ram:
+          type: number
+          example: 0.9
+          description: "RAM percentage allocated for this service."
+
+    devicelist:
+      type: "object"
+      properties:
+        audio:
+          type: array
+          items:
+            type: string
+          example: ["a", "b"]
+        video:
+          type: array
+          items:
+            type: string
+          example: ["a", "b"]
+        serial:
+          type: array
+          items:
+            type: string
+          example: ["a", "b"]

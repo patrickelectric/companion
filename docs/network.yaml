@@ -2,77 +2,71 @@ paths:
   /network/scanWifi:
     get:
       tags:
-       - "network"
-      summary: "Read Companion system detected devices"
-      description: "Read CPU, Disk and RAM status of the companion computer"
-      operationId: "scanWifi"
-      produces:
-      - "application/json"
+        - network
+      summary: Read Companion system detected devices
+      description: Read CPU, Disk and RAM status of the companion computer
+      operationId: scanWifi
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: "object"
-            items:
-              type: array
-            example:
-              - "wifi 1"
-              - "wifi 2"
-              - "wifi 3"
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  type: array
+                  items: {}
+                example:
+                  - wifi 1
+                  - wifi 2
+                  - wifi 3
         500:
-          description: "Error reading system services"
-  
+          description: Error reading system services
   /network/connectWifi:
     post:
       tags:
-       - "network"
-      summary: "Connect to a Wi-Fi network"
-      description: "Connect to the chosen Wi-Fi network"
-      operationId: "connectWifi"
-      consumes:
-        - application/json
-      parameters:
-        - in: body
-          name: WiFi
-          description: The network to connect to.
-          schema:
-            type: object
-            required:
-              - ssid
-              - password
-            properties:
-              ssid:
-                type: string
-              password:
-                type: string
-
-      produces:
-      - "application/json"
+        - network
+      summary: Connect to a Wi-Fi network
+      description: Connect to the chosen Wi-Fi network
+      operationId: connectWifi
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ssid
+                - password
+              properties:
+                ssid:
+                  type: string
+                password:
+                  type: string
+        description: The network to connect to.
       responses:
         200:
-          description: "successful operation"
+          description: successful operation
         500:
-          description: "Error connecting"
-  
+          description: Error connecting
   /network/status:
     get:
       tags:
-       - "network"
-      summary: "Read Network status"
-      description: "Read current wifi state and internet accessibility"
-      operationId: "wifiStatus"
-      produces:
-      - "application/json"
+        - network
+      summary: Read Network status
+      description: Read current wifi state and internet accessibility
+      operationId: wifiStatus
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: "object"
-            properties:
-              internet: 
-                type: boolean
-              ssid:
-                type: string
-                example: "Home WiFi" 
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  internet:
+                    type: boolean
+                  ssid:
+                    type: string
+                    example: Home WiFi
         500:
-          description: "Error reading network status"
+          description: Error reading network status
