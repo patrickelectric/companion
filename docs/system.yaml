@@ -32,10 +32,6 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/service"
-            example:
-              - "webui"
-              - "pingdriver"
-              - "mavproxy"
         500:
           description: "Error reading system services"
 
