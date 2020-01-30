@@ -10,7 +10,7 @@ screen -X -S ardusub-linux quit
 $COMPANION_DIR/scripts/detect-navigator.sh
 NAVIGATOR_VERSION=$?
 
-if [ NAVIGATOR_VERSION == 0 ]; then
+if [ $NAVIGATOR_VERSION == 0 ]; then
     echo "No navigator board detected."
     exit 1
 fi
