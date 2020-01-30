@@ -3,6 +3,10 @@
 COMPANION_DIR=/home/pi/companion
 ARDUSUB_FOLDER=$COMPANION_DIR/ardusub
 
+# Kill ardusub-socat and ardusub-linux before probing the hardware interface
+screen -X -S ardusub-socat quit
+screen -X -S ardusub-linux quit
+
 $COMPANION_DIR/scripts/detect-navigator.sh
 NAVIGATOR_VERSION=$?
 
@@ -12,9 +16,6 @@ if [ NAVIGATOR_VERSION == 0 ]; then
 fi
 
 echo "Navigator board detected!"
-
-# Kill ardusub-socat and check if /dev/autopilot exist
-screen -X -S ardusub-socat quit
 
 if [ -f "/dev/autopilot" ]; then
     echo "/dev/autpilot exists, check if pixhawk is connected and restart companion."
@@ -28,7 +29,6 @@ sudo -H -u pi screen -dm -S ardusub-socat \
     PTY,perm=0666,link=/dev/navigator
 
 echo "Start ardusub linux."
-screen -X -S ardusub-linux quit
 sudo -H -u pi screen -dm -S ardusub-linux \
     sudo $ARDUSUB_FOLDER/ardusub \
     -A /dev/navigator \
