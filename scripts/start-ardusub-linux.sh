@@ -1,5 +1,6 @@
 #!/bin/bash
 # Check if navigator is connected and starts ardusub linux
+COMPANION_DIR=/home/pi/companion
 ARDUSUB_FOLDER=$COMPANION_DIR/ardusub
 
 $COMPANION_DIR/scripts/detect-navigator.sh
