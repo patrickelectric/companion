@@ -307,6 +307,12 @@ if (( $PRE_0_0_19 > 0 )); then
         echo "$STRING" | sudo tee -a /boot/config.txt
     done
 
+    # Remove any configuration or commented part related to the i2c drive
+    for STRING in "i2c-dev" "i2c-bcm2708"; do
+        sudo sed -i "/$STRING/d" /etc/modules
+        echo "$STRING" | sudo tee -a /etc/modules
+    done
+
     # Install i2c tools
     sudo apt update --yes
     sudo apt install i2c-tools --yes
