@@ -322,6 +322,9 @@ if (( $PRE_0_0_19 > 0 )); then
 
     # Install socat to create bind between /dev/navigator and /dev/autopilot
     sudo apt install socat --yes
+
+    # This versions updates mavproxy default parameters
+    # The user should apply the default parameters if he wishs to use all features available
 fi
 
 echo 'Update Complete, refresh your browser'
