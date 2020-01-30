@@ -313,6 +313,9 @@ if (( $PRE_0_0_19 > 0 )); then
         echo "$STRING" | sudo tee -a /etc/modules
     done
 
+    # Remove any console serial configuration
+    sudo sed -e 's/console=serial[0-9],[0-9]*\ //' -i /boot/cmdline.txt
+
     # Install i2c tools
     sudo apt update --yes
     sudo apt install i2c-tools --yes
