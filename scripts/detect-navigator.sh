@@ -13,8 +13,8 @@ ADS115_DETECTED=$?
 
 if [ $PCA9685_DETECTED != 0 ] || [ $ADS115_DETECTED != 0 ]; then
     echo "Navigator not detected."
-    return 0
+    exit 0
 else
     echo "Navigator detected."
-    return 1
+    exit 1
 fi
