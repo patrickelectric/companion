@@ -315,7 +315,8 @@ if (( $PRE_0_0_19 > 0 )); then
     sudo apt install socat --yes
 fi
 
-echo 'Update Complete, refresh your browser'
+echo 'Update Complete, the system will reboot now.'
+echo 'Wait for 30 seconds and refresh the page.'
 
 sleep 0.1
 
@@ -327,3 +328,6 @@ sudo -H -u pi screen -dm -S webui $HOME/companion/scripts/start_webui.sh
 
 sudo -H -u pi echo 'removing lock' >> $HOME/.update_log
 rm -f $HOME/.updating
+
+# Reboot the system now and calling shutdown as a detached background subshell process
+sudo shutdown -r now &
