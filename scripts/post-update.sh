@@ -319,6 +319,9 @@ if (( $PRE_0_0_19 > 0 )); then
 
     # Install socat to create bind between /dev/navigator and /dev/autopilot
     sudo apt install socat --yes
+
+    # Force update of mavproxy params to add mavlink2rest and ping-viewer outputs
+    sudo cp $HOME/companion/params/mavproxy.param.default $HOME/mavproxy.param
 fi
 
 echo 'Update Complete, refresh your browser'
