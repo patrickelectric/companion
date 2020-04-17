@@ -327,6 +327,13 @@ if (( $PRE_0_0_19 > 0 )); then
     # The user should apply the default parameters if he wishs to use all features available
 fi
 
+# 0.0.21
+if (( 1 > 0 )); then
+    # Enable DHCP server
+    echo "config-server" > /home/pi/network.conf
+fi
+
+
 echo 'Update Complete, the system will reboot now.'
 echo 'Wait for 30 seconds and refresh the page.'
 
