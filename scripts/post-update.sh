@@ -329,9 +329,9 @@ fi
 
 
 # Check pre-0.0.20 to update DHCP server and RTSP video
-PRE_0_0_20=$(( git rev-list --count --left-right 0.0.19...revert-point || echo 0 ) | cut -f1)
+PRE_0_0_20=$(( git rev-list --count --left-right 0.0.20...revert-point || echo 0 ) | cut -f1)
 
-if (( $PRE_0_0_19 > 0 )); then
+if (( $PRE_0_0_20 > 0 )); then
     # Enable DHCP server by default
     echo "config-server" > /home/pi/network.conf
 
