@@ -1,4 +1,4 @@
-#!/usr/bin/env python -u
+#!/usr/bin/env python3 -u
 
 """Scan serial ports for ping devices
     Symlinks to detected devices are created under /dev/serial/ping/
