@@ -6,39 +6,6 @@
 // WiFi Setup
 var networking = io('/networking');
 
-networking.on('wifi aps', function(data) {
-
-	console.log('got wifi aps')
-	var select = document.getElementById("ssid");
-	
-	if (select.options[select.selectedIndex]) {
-		var currentSSID = select.options[select.selectedIndex].text;
-		console.log('current SSID:' + currentSSID);
-	}
-	
-	while (select.hasChildNodes()) {
-		select.removeChild(select.lastChild);
-	}
-	
-	var index = 0;
-	var newIndex = 0;
-	
-	data.forEach(function(line) {
-		var option = document.createElement('option');
-		option.value = line;
-		option.innerHTML = line;
-		if (currentSSID && line == currentSSID) {
-			newIndex = index;
-			console.log('match! new index:' + index);
-		}
-		select.appendChild(option);
-		index++;
-		console.log(index);
-	});
-	
-	select.selectedIndex = newIndex;
-});
-
 socket.on('internet status', function(data) {
 	console.log('got internet status')
 	console.log(data);
@@ -50,42 +17,110 @@ socket.on('internet status', function(data) {
 	}
 });
 
-networking.on('wifi status', function(data) {
-	console.log('got wifi status')
-	console.log(data);
-	var statusIndicator = document.getElementById("wifi-status");
-	statusIndicator.innerHTML = data;
-});
+class Wifi {
+	run () {
+		Wifi.createTimer(Wifi.status, 3000)
+		Wifi.createTimer(Wifi.scan, 4000)
+	}
 
-networking.on('join complete', function(data) {
-	disableButton(false);
-});
+	static createTimer(fun, ms) {
+		fun()
+		setInterval(fun, ms)
+	}
+
+	static status() {
+		$.get('/service/network/wifi/status', function(data, status) {
+			if(!data.hasOwnProperty('wpa_state')) {
+				console.log("No state in server reply:", data, status)
+				return
+			}
+
+			var statusIndicator = document.getElementById("wifi-status")
+			statusIndicator.innerHTML = data['wpa_state']
+
+			switch (data['wpa_state']) {
+				case 'INACTIVE':
+					statusIndicator.innerHTML = '<h4 style="color:red;">Disconnected</h1>'
+					break;
+				case 'SCANNING':
+				case 'ASSOCIATED':
+					statusIndicator.innerHTML = '<h4 style="color:goldenrod;">Scanning</h1>'
+					break;
+				case 'COMPLETED':
+					statusIndicator.innerHTML = `<h4 style="color:green;">Connected: ${data['ssid']} (${data['ip_address']})</h1>`
+					disableButton(false)
+					break;
+			}
+		})
+	}
+
+	static scan() {
+		$.get('/service/network/wifi/scan', function(data, status) {
+			var ssid_list = []
+			for(var element of data) {
+				if(element.ssid && !ssid_list.includes(element.ssid)) {
+					ssid_list.push(element.ssid)
+				}
+			}
+
+			var select = document.getElementById("ssid");
+
+			if (select.options[select.selectedIndex]) {
+				var currentSSID = select.options[select.selectedIndex].text;
+				console.log('current SSID:' + currentSSID);
+			}
+
+			while (select.hasChildNodes()) {
+				select.removeChild(select.lastChild);
+			}
+
+			var index = 0;
+			var newIndex = 0;
+
+			ssid_list.forEach(function(line) {
+				var option = document.createElement('option');
+				option.value = line;
+				option.innerHTML = line;
+				if (currentSSID && line == currentSSID) {
+					newIndex = index;
+					console.log('match! new index:' + index);
+				}
+				select.appendChild(option);
+				index++;
+			});
+
+			select.selectedIndex = newIndex;
+		});
+	}
+
+	connect(ssid, password) {
+		var data = {
+			"ssid" : ssid,
+			"password" : password
+		}
+
+		$.post('/service/network/wifi/connect', JSON.stringify(data), function(data, status) {
+			console.log("Wifi connect answer:", data, status)
+		}, 'json');
+	}
+}
+
+var wifi = new Wifi()
+wifi.run()
 
 function joinNetwork() {
 	disableButton(true);
+
 	var select = document.getElementById("ssid");
 	var ssid = select.options[select.selectedIndex].text;
-	networking.emit('join network', {
-		"ssid" : ssid,
-		"password" : document.getElementById('password').value
-	});
+
+	wifi.connect(ssid, document.getElementById('password').value)
 };
 
 function disableButton(disabled) {
 	document.getElementById('joinButton').disabled = disabled;
 	document.getElementById('spinner').style.visibility = disabled ? "visible" : "hidden";
 }
-
-networking.emit('get wifi status');
-networking.emit('get wifi aps');
-
-setInterval(function() {
-	networking.emit('get wifi status');
-}, 3000);
-
-setInterval(function() {
-	networking.emit('get wifi aps');
-}, 6000);
 
 // \WiFi Setup
 

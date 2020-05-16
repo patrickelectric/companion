@@ -29,6 +29,18 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 // Holds the last status message for each service
 var serviceStatus = {}
 
+var httpProxy = require('http-proxy');
+var apiProxy = httpProxy.createProxyServer()
+
+apiProxy.on('error', function(e) {
+	console.log('http-proxy error:', e)
+});
+
+// reverse proxy for network
+app.all("/service/network*", function(req, res) {
+	apiProxy.web(req, res, {target: 'http://localhost:9000/'});
+});
+
 var fs = require("fs");
 var expressLiquid = require('express-liquid');
 var options = {
@@ -673,125 +685,6 @@ gitsetup.on('connection', function(socket) {
 				logger.log(err);
 				socket.emit('git error', err);
 			});
-	});
-});
-
-networking.on('connection', function(socket) {
-	
-	// Network setup
-	socket.on('join network', function(data) {
-		logger.log('join network');
-		
-		try {
-			var passphrase = child_process.execSync("wpa_passphrase '" + data.ssid + "' '" + data.password + "'");
-			
-			var networkString = passphrase.toString();
-			networkString = networkString.replace(/\t#.*\n/g, ''); // strip unencrypted password out
-			networkString = networkString.replace(/"/g, '\\"'); // escape quotes
-			
-			logger.log(networkString);
-			
-			// Restart the network in the callback
-			cmd = child_process.exec("sudo sh -c \"echo '" + networkString + "' > /etc/wpa_supplicant/wpa_supplicant.conf\"", function (error, stdout, stderr) {
-				logger.log("sudo sh -c \"echo '" + networkString + "' > /etc/wpa_supplicant/wpa_supplicant.conf\" : ", error + stdout + stderr);
-				var cmd = child_process.exec('sudo ifdown wlan0 && sudo ifup wlan0', function (error, stdout, stderr) {
-					logger.log("restarting network");
-					logger.log(error + stdout + stderr);
-					socket.emit('join complete');
-				});
-			}); 
-		} catch (e) {
-			logger.error(e);
-			socket.emit('join complete');
-		}
-	});
-	
-	
-	// Network setup
-	socket.on('get wifi aps', function() {
-		logger.log("get wifi aps");
-		try {
-			var cmd = child_process.execSync('sudo wpa_cli scan');
-			logger.log("sudo wpa_cli scan : ", cmd.toString());
-		} catch (e) {
-			logger.error("wpa_cli scan failed!", e.stderr.toString(), e);
-			
-			logger.log("WiFi scan failed, attempting to repair configuration....");
-			logger.log("Fetching current contents....");
-			cmd = child_process.execSync("sudo cat /etc/wpa_supplicant/wpa_supplicant.conf");
-			logger.log(cmd.toString());
-			
-			logger.log("Bringing down wlan0....");
-			cmd = child_process.execSync("sudo ifdown wlan0");
-			logger.log(cmd.toString());
-			
-			logger.log("Writing over config....");
-			cmd = child_process.execSync("sudo sh -c 'echo > /etc/wpa_supplicant/wpa_supplicant.conf'");
-			logger.log(cmd.toString());
-			
-			logger.log("Bringing wlan0 up....");
-			cmd = child_process.execSync("sudo ifup wlan0");
-			logger.log(cmd.toString());
-			
-			return;
-		}
-		
-		try {
-			// The regex here matches bytes escaped by a backslash, such as \xf3 or \x23 and replaces them
-			// with the char resulting of encoding the byte. The extra backslashes are for escaping (string in a string)
-			cmd = child_process.execSync("sudo wpa_cli scan_results | grep PSK | cut -f5 | perl -pe 's/\\\\x([\\\da-f]{2})/chr(hex($1))/gie' |  grep .");
-			logger.log("wpa_cli scan_results: ", cmd.toString());
-			socket.emit('wifi aps', cmd.toString().trim().split("\n"));
-		} catch (e) {
-			logger.error("wpa_cli scan_results failed!", e.stderr.toString(), e);
-		}
-	});
-	
-	
-	socket.on('get wifi status', function() {
-		logger.log("get wifi status");
-		// The regex here matches bytes escaped by a backslash, such as \xf3 or \x23 and replaces them
-		// with the char resulting of encoding the byte. The extra backslashes are for escaping (string in a string)
-		var cmd = child_process.exec("sudo wpa_cli status | perl -pe 's/\\\\x([\\\da-f]{2})/chr(hex($1))/gie'", function (error, stdout, stderr) {
-			logger.log("sudo wpa_cli status : ", error + stdout + stderr);
-			if (error) {
-				socket.emit('wifi status', '<h4 style="color:red;">Error: ' + stderr + '</h1>');
-			} else {
-				if (stdout.indexOf("DISCONNECTED") > -1) {
-					socket.emit('wifi status', '<h4 style="color:red;">Disconnected</h1>');
-				} else if (stdout.indexOf("SCANNING") > -1) {
-					socket.emit('wifi status', '<h4 style="color:red;">Scanning</h1>');
-				} else if (stdout.indexOf("INACTIVE") > -1) {
-					socket.emit('wifi status', '<h4 style="color:red;">Inactive</h1>');
-				} else {
-					var fields = stdout.split("\n");
-					for (var i in fields) {
-						var line = fields[i].split("=");
-						if (line[0] == "ssid") {
-							var ssid = line[1];
-						} else if (line[0] == "ip_address") {
-							var ip = " (" + line[1] + ")";
-						}
-					}
-					
-					if (stdout.indexOf("HANDSHAKE") > -1) {
-						socket.emit('wifi status', '<h4>Connecting: ' + ssid + '</h1>');
-					} else {
-						var ipString = ""
-						if (ip != undefined) {
-							ipString = ip
-						}
-						
-						var ssidString = ""
-						if (ssid != undefined) {
-							ssidString = ssid
-						}
-						
-						socket.emit('wifi status', '<h4 style="color:green;">Connected: ' + ssidString + ipString + '</h4>');
-					}
-				}
-			}
-		});
 	});
 });
 
