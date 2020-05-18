@@ -352,6 +352,14 @@ if (( $PRE_0_0_21 > 0 )); then
     fi
 fi
 
+# Check pre-0.0.22 to install network service
+PRE_0_0_22=$(( git rev-list --count --left-right 0.0.22...revert-point || echo 0 ) | cut -f1)
+
+if (( $PRE_0_0_22 > 0 )); then
+    sudo apt install -y python3-pip
+    sudo python3 $HOME/companion/services/network/setup.py install
+fi
+
 echo 'Update Complete, the system will reboot now.'
 echo 'Wait for 30 seconds and refresh the page.'
 
