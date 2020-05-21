@@ -356,7 +356,13 @@ if (( $PRE_0_0_20 > 0 )); then
     cd ~/companion
 
     # Install mavlink-camera-manager
-    wget https://github.com/patrickelectric/mavlink-camera-manager/releases/download/0.2.3/mavlink-camera-manager-rtsp-server-armv7 -O ~/companion/tools/mavlink-camera-manager
+    MAVLINK_CAMERA_MANAGER_BIN=~/companion/tools/mavlink-camera-manager
+    wget https://github.com/patrickelectric/mavlink-camera-manager/releases/download/0.2.4/mavlink-camera-manager-rtsp-server-armv7 -O ${MAVLINK_CAMERA_MANAGER_BIN}
+    chmod +x ${MAVLINK_CAMERA_MANAGER_BIN}
+
+    # Add video driver on /etc/modules to load on boot
+    sudo sed -i "/bcm2835-v4l2/d" /etc/modules
+    echo "bcm2835-v4l2" | sudo tee -a /etc/modules
 fi
 
 
