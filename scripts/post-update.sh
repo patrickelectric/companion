@@ -333,30 +333,30 @@ PRE_0_0_20=$(( git rev-list --count --left-right 0.0.20...revert-point || echo 0
 
 if (( $PRE_0_0_20 > 0 )); then
     # Enable DHCP server by default
-    echo "config-server" > /home/pi/network.conf
+    #echo "config-server" > /home/pi/network.conf
 
     # camera-manager
     ## Install libavahi
-    sudo apt install libavahi-glib-dev libavahi-core-dev --yes
+    sudo apt install --yes \
+        libavahi-glib-dev \
+        libavahi-core-dev \
+        libgstreamer1.0-dev \
+        libgstreamer-plugins-base1.0-dev \
 
     ## Install gst-rtsp-server
     cd /tmp
     [ ! -d gst-rtsp-server ] && git clone git://anongit.freedesktop.org/git/gstreamer/gst-rtsp-server
-    cd gst-rtsp-server
-    git checkout -t origin/1.8
-    git pull
-    ./autogen.sh --disable-gtk-doc
-    make -j4
-    sudo make -j4 install
+    cd gst-rtsp-server &&
+        git checkout -t origin/1.8 && \
+        git pull && \
+        ./autogen.sh --disable-gtk-doc && \
+        make -j4 && \
+        sudo make -j4 install
+
     cd ~/companion
 
-    ## Install cargo
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
-    # We can't call 'source $HOME/.cargo/env' since it'll erase all variables
-    export PATH="$HOME/.cargo/bin:$PATH"
-
-    # Install ardupilot-camera-manager
-    cargo --version
+    # Install mavlink-camera-manager
+    wget https://github.com/patrickelectric/mavlink-camera-manager/releases/download/0.2.3/mavlink-camera-manager-rtsp-server-armv7 -O ~/companion/tools/mavlink-camera-manager
 fi
 
 
