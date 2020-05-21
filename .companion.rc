@@ -15,7 +15,7 @@ if [ ! -f /home/pi/.updating ]; then
 		sudo -H -u pi screen -dm -S pingmav python $COMPANION_DIR/tools/ping1d_mavlink_driver.py
 	fi
 	sudo -H -u pi screen -dm -S mavproxy $COMPANION_DIR/tools/telem.py
-	sudo -H -u pi screen -dm -S video $COMPANION_DIR/tools/streamer.py 
+	#sudo -H -u pi screen -dm -S video $COMPANION_DIR/tools/streamer.py
 	sudo -H -u pi screen -dm -S webui $COMPANION_DIR/scripts/start_webui.sh
 	sudo -H -u pi screen -dm -S webterminal $COMPANION_DIR/scripts/start_webterminal.sh
 	sudo -H -u pi screen -dm -S commrouter $COMPANION_DIR/tools/comm_router.py
