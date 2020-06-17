@@ -202,13 +202,6 @@ if (( $PRE_0_0_8 > 0 )); then
     echo "pi:companion" | sudo chpasswd
 fi
 
-# We need to load bcm v4l2 driver in case Raspberry Pi camera is in use
-PRE_0_0_11=$(( git rev-list --count --left-right 0.0.11...revert-point || echo 0 ) | cut -f1)
-if (( $PRE_0_0_11 > 0 )); then
-    echo "restarting video stream"
-    ~/companion/scripts/start_video.sh $(cat ~/companion/params/vidformat.param.default)
-fi
-
 # add local repo as a remote so it will show up in webui
 cd ~/companion
 if ! git remote | grep -q local; then
