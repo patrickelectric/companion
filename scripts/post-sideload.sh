@@ -103,10 +103,6 @@ done
 echo "changing default password to 'companion'..."
 echo "pi:companion" | sudo chpasswd
 
-# We need to load bcm v4l2 driver in case Raspberry Pi camera is in use
-echo "restarting video stream"
-~/companion/scripts/start_video.sh $(cat ~/companion/params/vidformat.param.default)
-
 # add local repo as a remote so it will show up in webui
 cd ~/companion
 if ! git remote | grep -q local; then
