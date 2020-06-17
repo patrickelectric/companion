@@ -7,6 +7,28 @@
 <script src="js/bootstrap-slider.js"></script>
 
 <script>
+	const PIPELINES = {
+		"udp": {
+			"pipeline_elements": [
+				"v4l2src device=${camera}",
+				"video/x-h264,width=${width},height=${height},framerate=${framerate}/1,type=video",
+				"h264parse",
+				"queue",
+				"rtph264pay config-interval=10 pt=96",
+				"multiudpsink clients=${clients}"
+			],
+			"endpoint_prefix": 'udp://',
+		},
+		"rtsp": {
+			"pipeline_elements": [
+				"v4l2src device=${camera}",
+				"video/x-h264,width=${width},height=${height},framerate=${framerate}/1,type=video",
+				"rtph264pay name=pay0"
+			],
+			"endpoint_prefix": 'rtsp://',
+		}
+	}
+
 	var socket = io();
 
 	var _cameras = [];
@@ -15,53 +37,106 @@
 	var _allLoaded = false;
 	
 	const GST_PARAM_FILE = 'gstreamer2.param';
-	
-	function updateGst(reset) {
-		disableAll(true);
-	
-		var gstOptions;
-		
-		if (!reset) {
-			gstOptions = document.getElementById('gstOptions').value;
+
+	function changeStreamType(streamType) {
+		console.log(`Updating selected stream option to: ${streamType}`)
+		const streamTypeSelect = document.getElementById("stream-type-select")
+		for (var index in streamTypeSelect.options) {
+			var option = streamTypeSelect.options[index]
+			if (option.innerHTML == streamType) {
+				streamTypeSelect.selectedIndex = index
+				$("select").selectpicker('refresh')
+				break
+			}
 		}
-		console.log("update gst");
-		socket.emit('update gstreamer', gstOptions);
 	}
-	
+
 	function loadOptions() {
-		socket.emit('load params', {'file':GST_PARAM_FILE});
-	}
+		$.get('/pipelines', function(data) {
+			console.log(`Load pipeline: ${JSON.stringify(data)}`)
+			const videoConfiguration = data.videos_configuration[0]			
+
+			// String that represents the type of stream. E.g: 'udp', 'rtsp', ...
+			const streamType = (function() {
+				for (const [streamType, content] of Object.entries(PIPELINES)) {
+					if (videoConfiguration.endpoint.includes(content.endpoint_prefix)) {
+						return streamType
+					}
+				}
+			})()
+			
+			/**
+			 * Fetch data from attributions like [caps string](https://gstreamer.freedesktop.org/documentation/additional/design/caps.html),
+			 * following the syntax 'variable=value'.
+			 * The result is a dict that contains a key for each variable and the value as the value of the key.
+			 * Right now it supports: width, height, framerate and clients for multiudpsink
+			 */
+			const values = (function() {
+				var result = {}
+
+				// Get basic information
+				for (var key of ['width', 'height', 'framerate']) {
+					const regex = eval(`/${key}=(?<${key}>\\d+)/`)
+					const [_, match] = regex.exec(videoConfiguration.pipeline)
+					result[key] = match
+				}
 		
-	socket.on('load params response', function(data) {
-		switch(data.file) {
-		case GST_PARAM_FILE:
-			document.getElementById('gstOptions').value = data.params;
-			document.getElementById('gstOptions').disabled = false;
-			break;
-		}
-	});
+				switch (streamType) {
+					case 'udp':
+						// Get regex that match with <IP:port,IP:port..>
+						const regex = /clients=(?<clients>[A-z|0-9|.|:|,]+)/
+						const [_, match] = regex.exec(videoConfiguration.pipeline)
+						result['clients'] = match
+
+					default:
+						console.log(`Can't parse ${streamType} since it does not have clients configuration.`)
+				}
+				
+				return result
+			})()
+
+			// Update interface controls based in the values extracted from the pipeline
+
+			// Update stream option
+			changeStreamType(streamType)
+
+			// And force the update of the menu
+			streamTypeChanged()
+
+			// Update client input
+			const menuClientElement = document.getElementById(streamType + '-clients')
+			if (menuClientElement != null) {
+				menuClientElement.value = values.clients
+			}
+			
+			// Update frame size input
+			const frameSize = [values.width, values.height].join('x')
+			console.log(`Updating selected frame size to: ${frameSize}`)
+			$('#frame-size-select').val(frameSize).change()
+			
+			// Update framerate input
+			console.log(`Updating selected framerate to: ${values.framerate}`)
+			$('#framerate-select').val(values.framerate).change()
+		})
+	}
 	
 	function getCameraSelection() {
-		return document.getElementById("v4l2 camera select").value;
+		return document.getElementById("camera-select").value;
 	}
 
 	function getFormatSelection() {
-		return document.getElementById("v4l2 format select").value;
+		return document.getElementById("format-select").value;
 		
 	}
 	
 	function getFrameSizeSelection() {
-		return document.getElementById("v4l2 frame size select").value;
+		return document.getElementById("frame-size-select").value;
 	}
 	
 	function getFpsSelection() {
-		return document.getElementById("v4l2 fps select").value;
+		return document.getElementById("framerate-select").value;
 	}
-	
-	function getCameraSelection() {
-		return document.getElementById("v4l2 camera select").value;
-	}
-	
+
 	function getCameraById(id) {
 		var ret = undefined
 		_cameras.forEach(function(camera) {
@@ -76,11 +151,6 @@
 	
 	var formats = {};
 	
-	socket.on("video up", function() {
-		loadOptions();
-		disableAll(false);
-	});
-	
 	function disableAll(disable) { 
 		console.log("disabled:",disable);
 		$(".panel-body *").attr("disabled", disable);
@@ -92,9 +162,9 @@
 		}
 		$("input[camera_bool]").bootstrapSwitch('disabled', disable);
 	}
-	
-	function fpsSelected() {
-		console.log("fps selected!", getFpsSelection());
+
+	function updateFramerateOptions() {
+		console.log(`Update options for framerate: ${getFpsSelection()}`);
 
 		$("select").selectpicker();
 
@@ -103,28 +173,16 @@
 			return;
 		}
 		
-		disableAll(true);
-		socket.emit("set v4l2 format", {
-			format: formats[getFormatSelection()].formatName,
-			width: getFrameSizeSelection().split('x')[0],
-			height: getFrameSizeSelection().split('x')[1],
-			interval: {
-				numerator: 1,
-				denominator: getFpsSelection()
-			},
-			id: getCameraSelection()
-		});
-		
 		_activeFormat.format = formats[getFormatSelection()].formatName;
 		_activeFormat.frameSize = getFrameSizeSelection();
 		_activeFormat.frameRate = getFpsSelection();
 		_activeFormat.device = getCameraSelection();
 	}
 
-	function frameSizeSelected() {
-		console.log("frame size selected!", getFrameSizeSelection());
+	function updateFrameSizeOptions() {
+		console.log(`Update options for frame size: ${getFrameSizeSelection()}`);
 		
-		var fps_select = document.getElementById("v4l2 fps select");
+		var fps_select = document.getElementById("framerate-select");
 		
 		var old_selection = fps_select.options.length ? fps_select.options[fps_select.selectedIndex].value : null;
 		
@@ -141,12 +199,13 @@
 			fps_select.appendChild(option);
 		});
 		
-		fpsSelected();
+		updateFramerateOptions();
 	}
-	
-	function formatSelected() {
-		console.log("format selected!", getFormatSelection());
-		var frame_size_select = document.getElementById("v4l2 frame size select");
+
+	function updateFormatOptions() {
+		console.log(`Update options for format selection: ${getFormatSelection()}`);
+
+		var frame_size_select = document.getElementById("frame-size-select");
 		
 		var old_selection = frame_size_select.options.length ? frame_size_select.options[frame_size_select.selectedIndex].value : null;
 		
@@ -162,9 +221,9 @@
 			frame_size_select.appendChild(option);
 		}
 		
-		frameSizeSelected();
+		updateFrameSizeOptions();
 	}
-	
+
 	socket.on('v4l2 cameras', function(data) {
 		console.log("got cameras", data);
 		
@@ -204,11 +263,11 @@
 			socket.emit("load v4l2 profile", name);
 		}
 		
-		var cameraSelect = document.getElementById("v4l2 camera select");
+		var cameraSelect = document.getElementById("camera-select");
 		
 		if (!cameraSelect) {
 			cameraSelect = document.createElement("select");
-			cameraSelect.id = "v4l2 camera select";
+			cameraSelect.id = "camera-select";
 		}
 
 		while (cameraSelect.firstChild) {
@@ -410,9 +469,9 @@
 		
 		console.log(formats);
 		
-		var formatSelect = document.getElementById("v4l2 format select");
-		var frameSelect = document.getElementById("v4l2 frame size select");
-		var fpsSelect = document.getElementById("v4l2 fps select");
+		var formatSelect = document.getElementById("format-select");
+		var frameSelect = document.getElementById("frame-size-select");
+		var fpsSelect = document.getElementById("framerate-select");
 		
 		while (formatSelect.firstChild) {
 			formatSelect.removeChild(formatSelect.firstChild);
@@ -426,10 +485,9 @@
 			fpsSelect.removeChild(fpsSelect.firstChild);
 		}
 		
-		formatSelect.onchange = formatSelected;
-		frameSelect.onchange = frameSizeSelected;
-		fpsSelect.onchange = fpsSelected;
-		
+		formatSelect.onchange = updateFormatOptions;
+		frameSelect.onchange = updateFrameSizeOptions;
+		fpsSelect.onchange = updateFramerateOptions;
 		
 		for(var format in formats) {
 			console.log("checking format:",format); 
@@ -444,7 +502,13 @@
 			}
 		}
 		
-		formatSelected();
+		// When asking to update format options,
+		// this will result in an update of all others dependent options,
+		// like frame size and framerate
+		updateFormatOptions();
+		
+		// Load option from running pipeline
+		loadOptions();
 	}
 	
 	function newProfile() {
@@ -478,9 +542,146 @@
 	
 	disableAll(true);
 	
-	loadOptions(); // get gstreamer options
-	
 	socket.emit('get v4l2 cameras'); // get v4l2 options
+
+	// Deal with stream types
+	/// Populate valid video stream types
+	function populateStreamTypeSelect() {
+		// Get combobox and add all options, the value of each option is the string pipeline
+		const streamTypeSelect = document.getElementById("stream-type-select")
+		for (const [streamType, content] of Object.entries(PIPELINES)) {
+			// Create option and add to combobox
+			const option = document.createElement("option");
+			option.innerHTML = streamType;
+			option.value = content.pipeline_elements.join(' ! ')
+			
+			streamTypeSelect.appendChild(option)
+		}
+		
+		// Menu under streamTypeSelect with all options for each stream type
+		var streamTypeMenu = document.getElementById('stream-type-menu')
+		//UDP
+		{
+			// Create a parent item to enable visibity changes of the sub items
+			let udpMenu = document.createElement("div")
+			udpMenu.id = 'udp-menu'
+
+			let title = document.createElement("h4")
+			title.innerHTML = "Clients: "
+
+			let input = document.createElement("input")
+			input.id = 'udp-clients'
+			input.value = '192.168.2.1:5600'
+			
+			let info = document.createElement("div")
+			info.class = 'alert alert-info'
+			info.role = 'alert'
+			info.innerHTML = 'Accepts multiple endpoints, E.g: 192.168.2.2:5600,192.168.2.3:5600,...'
+			
+			title.appendChild(input)
+			udpMenu.appendChild(title)
+			udpMenu.appendChild(info)
+			streamTypeMenu.appendChild(udpMenu)
+		}
+
+		// RTSP
+		{
+			// No menu for now
+		}
+		
+		// Update visibility
+		streamTypeChanged()
+	}
+	
+	/// Check if the video stream type changed
+	function streamTypeChanged() {
+		// Get component and selected option
+		const streamTypeSelect = document.getElementById("stream-type-select")
+		const option = streamTypeSelect.options[streamTypeSelect.selectedIndex]
+		
+		// Use the selected option to make the `option-menu` visible and others hidden
+		for (const [streamType, _] of Object.entries(PIPELINES)) {
+			const menuName = streamType + '-menu'
+			var item = document.getElementById(menuName)
+			if (item == null) {
+				console.log(`Component: ${menuName} does not exist or is not ready yet.`)
+				break
+			}
+			const visible = streamType == option.innerHTML
+			item.style.visibility = visible ? 'visible' : 'hidden'
+			item.style.display = visible ? 'block' : 'none'
+		}
+	}
+
+	// Set default gstreamer configuration
+	function setDefaultGstreamerConfiguration() {
+		const streamType = "udp"
+		const frameSize = [1920, 1080].join('x')
+		const frameRate = 30
+
+		changeStreamType(streamType)
+
+		console.log(`Updating selected frame size to: ${frameSize}`)
+		$('#frame-size-select').val(frameSize).change()
+
+		console.log(`Updating selected framerate to: ${frameRate}`)
+		$('#framerate-select').val(frameRate).change()
+
+		applyGstreamer()
+	}
+
+	// Apply Gstreamer pipeline
+	function applyGstreamer() {
+		// Get selected stream option
+		const streamTypeSelect = document.getElementById("stream-type-select")
+		const option = streamTypeSelect.options[streamTypeSelect.selectedIndex]
+		const stream_type = option.innerHTML
+		
+		/// Crete necessary variables for the pipeline
+		// Generic variables
+		const camera = getCameraSelection()
+		const [width = 1920, height = 1080] = getFrameSizeSelection().split('x')
+		const framerate = getFpsSelection()
+		
+		const clients = (function() {
+			switch (stream_type) {
+				case 'udp':
+					return document.getElementById("udp-clients").value
+					break
+				case 'rtsp':
+					return '{service_ip}:8554/video1'
+					break
+				default:
+					console.error(`Invalid stream option ${stream_type}, aborting!`)
+					return;
+			}
+		})()
+		
+		// Create endpoint from clients (comma separated list)
+		const endpoint = PIPELINES[stream_type].endpoint_prefix + clients.split(',')[0]
+		
+		// Create final pipeline
+		const pipeline = eval('`' + option.value + '`')
+		
+		// Create video configuration for camera-manager
+		const videoConfiguration = {
+			'device': camera,
+			'pipeline': pipeline,
+			'endpoint': endpoint,
+		}
+		
+		const jsonVideoConfiguration = JSON.stringify(videoConfiguration)
+		console.log(`About to send video configuration: ${jsonVideoConfiguration}`)
+		
+		// Send camera pipeline
+		$.ajax({
+			type: 'POST',
+			url: '/pipelines/0',
+			data: jsonVideoConfiguration,
+			dataType: 'json',
+			contentType: "application/json",
+		});
+	}
 	
 </script>
 
@@ -493,28 +694,36 @@
 				<h3 class="panel-title">Streaming Settings</h3>
 			</div>
 			<div class="panel-body">
-					<h4>Active Camera:
-						<select id="v4l2 camera select"></select>
+					<h4>Camera:
+						<select id="camera-select"></select>
 					</h4>
 					<h4>Format:
-						<select id="v4l2 format select"></select>
+						<select id="format-select"></select>
 					</h4>
-					<h4>Frame Size:
-						<select id="v4l2 frame size select"></select>
+					<h4>Frame Size (width x height):
+						<select id="frame-size-select"></select>
 					</h4>
 					<h4>Frame Rate (FPS):
-						<select id="v4l2 fps select"></select>
+						<select id="framerate-select"></select>
 					</h4>
-				
-					<h4>gstreamer options:</h4>
-					<textarea rows="10" id="gstOptions" disabled
-						style="font-family:monospace; width:100%;" onfocus="gstOptionsChanged()">Loading...
-					</textarea>
 					
-					<button id="reset-gst" class="btn btn-primary"
-						onclick="updateGst(true)">Default gstreamer options</button>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title">Streaming Settings</h3>
+						</div>
+						<div id="stream-type-menu" class="panel-body">
+							<h4>Stream type:
+								<select id="stream-type-select" onchange="streamTypeChanged()">
+									<script>populateStreamTypeSelect()</script>
+								</select>
+							</h4>
+						</div>
+					</div>
+
+					<button id="reset-gst" class="btn btn-secondary"
+						onclick="setDefaultGstreamerConfiguration()">Set Default</button>
 					<button id="update-gst" class="btn btn-primary"
-						onclick="updateGst(false)">Apply gstreamer options</button>
+						onclick="applyGstreamer()">Apply</button>
 			</div>
 		</div>
 	</div>

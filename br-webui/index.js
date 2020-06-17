@@ -27,6 +27,16 @@ app.use('/js', express.static(__dirname + '/node_modules/bootstrap-select/dist/j
 app.use('/css', express.static(__dirname + '/node_modules/bootstrap-select/dist/css'));
 app.use('/js', express.static(__dirname + '/node_modules/bootstrap-slider/dist'));
 app.use('/css', express.static(__dirname + '/node_modules/bootstrap-slider/dist/css'));
+
+// Reverse proxy for mavlink-camera-manager
+app.all("/pipelines*", function(req, res) {
+    apiProxy.web(req, res, {target: "http://localhost:4778/"});
+});
+
+apiProxy.on('error', function(e) {
+	console.log('http-proxy error:', e)
+});
+
 var bodyParser = require('body-parser')
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
@@ -1025,206 +1035,11 @@ io.on('connection', function(socket) {
 					
 				}
 			})
-			
-			logger.log(_companion_directory + '/scripts/restart_video.sh' + ' ' + profile.width + ' ' + profile.height + ' ' + profile.frameRate + ' ' + profile.device);
-			
-			var cmd = child_process.spawn(_companion_directory + '/scripts/restart_video.sh', [profile.width, profile.height, profile.frameRate, profile.device], {
-				detached: true
-			});
-			
-			
-			cmd.unref();
-			
-			cmd.stdout.on('data', function (data) {
-				logger.log(data.toString());
-			});
-			
-			cmd.stderr.on('data', function (data) {
-				logger.log(data.toString());
-			});
-			
-			cmd.on('exit', function (code) {
-				logger.log('start video exited with code ' + code.toString());
-				try {
-					////// Set v4l2 controls //////
-					_cameras.forEach(function(camera) {
-						if (camera.device == profile.device) {
-							for (var control in profile.controls) {
-								try {
-									logger.log("setting control", profile.controls[control].name, profile.controls[control].value);
-									camera.controlSet(control, profile.controls[control].value);
-									camera.controls.forEach(function(ctrl) {
-										if (ctrl.id == control.id) {
-											ctrl.value = profile.controls[control].value;
-										}
-									});
-								} catch (err) {
-									logger.log("error setting control", err);
-								}
-							}
-						}
-					});
-					
-					// Read back current values
-					_cameras.forEach(function(cam) {
-						// TODO put this in driver layer
-						cam.controls.forEach(function(control) {
-							if (control.type != "class") {
-								logger.log("getting control:", control.name, control.type);
-								try {
-									control.value = cam.controlGet(control.id);
-								} catch(err) {
-									logger.log("error getting control", err);
-								}
-							}
-						});
-					});
-					
-					// Save current settings
-					fs.writeFile(camera_settings_path, JSON.stringify(_cameras, null, 2), function(err) {
-						if(err) {
-							logger.log(err);
-						}
-						logger.log("The file was saved!", camera_settings_path);
-					});
-				} catch (err) {
-					logger.log("Error setting v4l2 controls:", err);
-				}
-				
-				try {
-					////// Update frontend //////
-					// Re-load file/activeFormat
-					var file_path = home_dir+"/vidformat.param";
-					var file_data = fs.readFileSync(file_path).toString();
-					var fields = file_data.split("\n");
-					
-					_activeFormat = { "frameSize": fields[0] + "x" + fields[1], "frameRate": fields[2], "device": fields[3], "format": "H264" }
-					
-					logger.log("updating frontend", _activeFormat);
-					socket.emit('v4l2 cameras', {
-						"cameras": _cameras,
-						"activeFormat": _activeFormat,
-						"profiles": _profiles,
-						"activeProfile": data
-					});
-					
-					socket.emit('video up');
-				} catch (err) {
-					logger.log("error updating frontend", err);
-				}
-			});
-			
-			cmd.on('error', (err) => {
-				logger.log('Failed to start video child process.');
-				logger.log(err.toString());
-			});
-			
 		} catch(err) {
 			logger.log("Error setting v4l2 format:", err);
 		}
 	});
-	
-	
-	// Set v4l2 streaming parameters
-	// This requires the video streaming application to be restarted
-	// The video streaming application needs to call the appropriate v4l2 ioctls, so we don't do it here
-	socket.on('set v4l2 format', function(data) {
-		try {
-			logger.log('set v4l2 format', data);
-			
-			_cameras.forEach(function(camera) {
-				if (camera.device == data.id) {
-					camera.activeFormat = { 
-							"format": data.format,
-							"width": data.width,
-							"height": data.height,
-							"denominator": data.interval.denominator
-					}
-					
-				}
-			})
-			
-			_activeFormat = { "frameSize": data.width + "x" + data.height, "frameRate": data.interval.denominator, "device": data.id, "format": "H264" }
-			
-			logger.log(_companion_directory + '/scripts/restart_video.sh' + ' ' + data.width + ' ' + data.height + ' ' + data.interval.denominator + ' ' + data.id);
-			
-			var cmd = child_process.spawn(_companion_directory + '/scripts/restart_video.sh', [data.width, data.height, data.interval.denominator, data.id], {
-				detached: true
-			});
-			
-			cmd.unref();
-			
-			cmd.stdout.on('data', function (data) {
-				logger.log(data.toString());
-			});
-			
-			cmd.stderr.on('data', function (data) {
-				logger.log(data.toString());
-			});
-			
-			cmd.on('exit', function (code) {
-				logger.log('start video exited with code ' + code.toString());
-				socket.emit('video up');
-			});
-			
-			cmd.on('error', (err) => {
-				logger.log('Failed to start video child process.');
-				logger.log(err.toString());
-			});
-			
-			// Save current settings
-			fs.writeFile(camera_settings_path, JSON.stringify(_cameras, null, 2), function(err) {
-				if(err) {
-					logger.log(err);
-				}
-				logger.log("The file was saved!", camera_settings_path);
-			});
-			
-		} catch(err) {
-			logger.log("Error setting v4l2 format:", err);
-		}
-	});
-	
-	socket.on('update gstreamer', function(data) {
-		logger.log("update gstreamer");
-		var params = data;
-		try {
-			if (!params) {
-				params = fs.readFileSync(_companion_directory + "/params/gstreamer2.param.default");
-			}
-			
-			var file_path = home_dir+"/gstreamer2.param";
-			fs.writeFileSync(file_path, params);
-			
-			var cmd = child_process.spawn(_companion_directory + '/scripts/restart_video.sh', {
-				detached: true
-			});
-			
-			cmd.unref();
-			
-			cmd.stdout.on('data', function (data) {
-				logger.log(data.toString());
-			});
-			
-			cmd.stderr.on('data', function (data) {
-				logger.log(data.toString());
-			});
-			
-			cmd.on('exit', function (code) {
-				logger.log('start video exited with code ' + code.toString());
-				socket.emit('video up');
-			});
-			
-			cmd.on('error', (err) => {
-				logger.log('Failed to start video child process.');
-				logger.log(err.toString());
-			});
-			
-		} catch(err) {
-			logger.log("Error updating gstreamer pipeline:", err);
-		}
-	});
-	
+
 	// used in routing setup
 	socket.on('get serial ids', function(data) {
 		logger.log("get serial ids");
@@ -1563,33 +1378,6 @@ io.on('connection', function(socket) {
 		
 		cmd.on('error', (err) => {
 			logger.error('ping update errored: ', err.toString());
-		});
-	});
-	
-	socket.on('restart video', function(data) {
-		logger.log(_companion_directory + '/scripts/restart-raspivid.sh "' + data.rpiOptions + '" "' + data.gstOptions + '"');
-		var cmd = child_process.spawn(_companion_directory + '/scripts/restart-raspivid.sh', [data.rpiOptions , data.gstOptions], {
-			detached: true
-		});
-		
-		cmd.unref();
-		
-		cmd.stdout.on('data', function (data) {
-			logger.log(data.toString());
-		});
-		
-		cmd.stderr.on('data', function (data) {
-			logger.log(data.toString());
-		});
-		
-		cmd.on('exit', function (code) {
-			logger.log('pixhawk update exited with code ' + code.toString());
-			socket.emit('video up');
-		});
-		
-		cmd.on('error', (err) => {
-			logger.log('Failed to start child process.');
-			logger.log(err.toString());
 		});
 	});
 
