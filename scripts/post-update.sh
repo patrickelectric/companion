@@ -351,6 +351,20 @@ PRE_0_0_22=$(( git rev-list --count --left-right 0.0.22...revert-point || echo 0
 if (( $PRE_0_0_22 > 0 )); then
     sudo apt install -y python3-pip
     sudo python3 $HOME/companion/services/network/setup.py install
+
+    # camera-manager
+    ## Install gst-rtsp-server
+    cd /tmp
+    [ ! -d gst-rtsp-server ] && git clone git://anongit.freedesktop.org/git/gstreamer/gst-rtsp-server
+    cd gst-rtsp-server
+    git checkout -t origin/1.8
+    git pull
+    ./autogen.sh --disable-gtk-doc
+    make -j4 && sudo make -j4 install
+    cd $HOME/companion
+
+    # Add LD_LIBRARY_PATH for screen
+    echo "setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH" >> ~/.screenrc
 fi
 
 echo 'Update Complete, the system will reboot now.'
