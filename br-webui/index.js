@@ -38,7 +38,7 @@ apiProxy.on('error', function(e) {
 
 // reverse proxy for network
 app.all("/service/network*", function(req, res) {
-	apiProxy.web(req, res, {target: 'http://localhost:9000/'});
+	apiProxy.web(req, res, {target: 'http://localhost:4779/'});
 });
 
 var fs = require("fs");

@@ -170,4 +170,4 @@ if __name__ == "__main__":
         wifi_manager.set_wifi_password(ssid, password)
         return to_pretty_json(wifi_manager.status())
 
-    bottle.run(host='0.0.0.0', port=9000)
+    bottle.run(host='0.0.0.0', port=4779)
