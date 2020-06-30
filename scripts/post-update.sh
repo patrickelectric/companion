@@ -364,7 +364,13 @@ if (( $PRE_0_0_22 > 0 )); then
     cd $HOME/companion
 
     # Add LD_LIBRARY_PATH for screen
-    echo "setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH" >> ~/.screenrc
+    echo "setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH" >> $HOME/.screenrc
+
+    echo "Kill running gst-launch..."
+    sudo pkill -9 -f gst-launch
+    echo "Converting old video settings file."
+    python3 $HOME/companion/tools/convert-old-video-settings-file.py
+
 fi
 
 echo 'Update Complete, the system will reboot now.'
