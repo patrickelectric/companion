@@ -110,7 +110,11 @@ class WifiManager:
         self.wpa.send_command_set_network(
             network_number, 'psk', '\"{}\"'.format(password))
         self.wpa.send_command_enable_network(network_number)
-        self.wpa.send_command_save_config()
+        answer, result = self.wpa.send_command_save_config()
+        answer = answer.strip()
+        if not result or answer == b'FAIL':
+            print("Failed to set network: ", answer)
+            return
         self.wpa.send_command_reconfigure()
 
     def status(self):
