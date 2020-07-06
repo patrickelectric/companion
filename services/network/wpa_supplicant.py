@@ -28,7 +28,7 @@ class WPASupplicant:
                 os.getpid())
             self.sock.bind(socket_client)
 
-        self.sock.settimeout(1)
+        self.sock.settimeout(10)
         self.sock.connect(self.target)
 
     def send_command(self, command):
