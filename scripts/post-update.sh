@@ -371,6 +371,11 @@ if (( $PRE_0_0_22 > 0 )); then
     echo "Converting old video settings file."
     python3 $HOME/companion/tools/convert-old-video-settings-file.py
 
+    # Enable bcm module for camera on boot
+    ## Make sure that there is only a line with this module
+    sudo sed -i "/bcm2835-v4l/d" /etc/modules
+    echo "bcm2835-v4l2" | sudo tee -a /etc/modules
+
 fi
 
 echo 'Update Complete, the system will reboot now.'
