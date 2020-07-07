@@ -35,7 +35,14 @@ class WPASupplicant:
         """Send a specific command
         """
         print('>', command)
-        self.sock.send(command.encode('utf-8'))
+
+        try:
+            self.sock.send(command.encode('utf-8'))
+        except Exception as e:
+            if self.verbose:
+                print('Exception:', e)
+            return e, False
+
         try:
             data, _ = self.sock.recvfrom(self.BUFFER_SIZE)
             if self.verbose:
