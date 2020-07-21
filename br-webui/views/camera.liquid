@@ -191,6 +191,9 @@
 			fps_select.removeChild(fps_select.firstChild);
 		}
 		
+		// Will populate _activeFormat
+		updateFramerateOptions();
+
 		formats[getFormatSelection()].frameSizes[getFrameSizeSelection()].forEach(function(fps) {
 			var option = document.createElement("option");
 			option.innerHTML = fps;
@@ -198,8 +201,6 @@
 			option.selected = option.value == _activeFormat.frameRate;
 			fps_select.appendChild(option);
 		});
-		
-		updateFramerateOptions();
 	}
 
 	function updateFormatOptions() {
@@ -233,17 +234,13 @@
 		}
 		_cameras = data.cameras;
 		
-		_activeFormat = data.activeFormat;
+		console.log(`Active profile: ${data.activeProfile}`)
 		
 		var profileSelect = document.getElementById("v4l2 profile select");
 		
 		while (profileSelect.firstChild) {
 			profileSelect.removeChild(profileSelect.firstChild);
 		}
-		
-		var option = document.createElement("option");
-		option.selected = true;
-		profileSelect.appendChild(option);
 		
 		for (var profile in data.profiles) {
 			var option = document.createElement("option");
@@ -259,7 +256,8 @@
 				console.log("no name for profile!");
 				return;
 			}
-			disableAll(true);
+
+			console.log(`Loading profile: ${name}`);
 			socket.emit("load v4l2 profile", name);
 		}
 		
@@ -304,7 +302,7 @@
 		var sliderContainer = document.getElementById("v4l2controls");
 		sliderContainer.innerHTML = "";
 		
-		console.log("camera selected!", getCameraSelection());
+		console.log(`camera selected: ${getCameraSelection()}`);
 		
 		var camera = getCameraById(getCameraSelection());
 		
@@ -520,6 +518,7 @@
 		var select = document.getElementById("v4l2 profile select");
 		var name = select.options[select.selectedIndex].value;
 		saveProfile(name);
+		cameraSelected();
 	}
 	
 	function saveProfile(name) {
@@ -527,7 +526,7 @@
 			console.log("no name for profile!");
 			return;
 		}
-		socket.emit("save v4l2 profile", name);
+		socket.emit("save v4l2 profile", name, _activeFormat);
 	}
 	
 	function deleteProfile() {
@@ -542,8 +541,6 @@
 	
 	disableAll(true);
 	
-	socket.emit('get v4l2 cameras'); // get v4l2 options
-
 	// Deal with stream types
 	/// Populate valid video stream types
 	function populateStreamTypeSelect() {
@@ -683,6 +680,8 @@
 		});
 	}
 	
+	socket.emit('get v4l2 cameras'); // get v4l2 options
+
 </script>
 
 <h1 id="camera setup">Camera Setup</h1>

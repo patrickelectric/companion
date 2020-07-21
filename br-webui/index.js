@@ -92,22 +92,6 @@ var v4l2camera = require("v4l2camera");
 // This holds all of the cameras/settings detected at start, and that are currently in use, we need to update this every time we modify the camera setttings
 var _cameras = []
 
-
-//This holds the current frame size, frame rate, video device, and video format
-//These settings are passed to the video streaming application, and are used by
-//gstreamer v4l2src element. The v4l2src element needs to call the appropriate ioctls,
-//so we don't do that in this application.
-var _activeFormat
-
-try {
-	var file_path = home_dir+"/vidformat.param";
-	var file_data = fs.readFileSync(file_path).toString();
-	var fields = file_data.split("\n");
-	_activeFormat = { "frameSize": fields[0] + "x" + fields[1], "frameRate": fields[2], "device": fields[3], "format": "H264" }
-} catch (err) {
-	logger.log("error loading video format from file", err);
-}
-
 // This holds the user created camera/streaming profiles
 var _profiles = {};
 
@@ -828,15 +812,8 @@ io.on('connection', function(socket) {
 		});
 		
 		try {
-			var file_path = home_dir+"/vidformat.param";
-			var file_data = fs.readFileSync(file_path).toString();
-			var fields = file_data.split("\n");
-			
-			_activeFormat = { "frameSize": fields[0] + "x" + fields[1], "frameRate": fields[2], "device": fields[3], "format": "H264" }
-						
 			socket.emit('v4l2 cameras', {
 				"cameras": _cameras,
-				"activeFormat": _activeFormat,
 				"profiles": _profiles
 			});
 		} catch(err) {
@@ -891,20 +868,14 @@ io.on('connection', function(socket) {
 		// Update frontend
 		socket.emit('v4l2 cameras', {
 			"cameras": _cameras,
-			"activeFormat": _activeFormat,
 			"profiles": _profiles
 		});
 	});
 	
-	socket.on('save v4l2 profile', function(data) {
+	socket.on('save v4l2 profile', function(data, profile) {
 		logger.log("save v4l2 profile");
 		try {
-			// Load gstreamer settings to use in this profile
-			var file_path = home_dir+"/vidformat.param";
-			var file_data = fs.readFileSync(file_path).toString();
-			var fields = file_data.split("\n");
-	
-			var profile = { "width": fields[0], "height" : fields[1], "frameRate": fields[2], "device": fields[3], "format": "H264", "controls": {} }
+			profile["controls"] = {}
 			
 			// Load v4l2 controls to use in this profile
 			_cameras.forEach(function(camera) {
@@ -926,13 +897,12 @@ io.on('connection', function(socket) {
 			file_path = home_dir+"/camera-profiles";
 			fs.writeFileSync(file_path, JSON.stringify(_profiles, null, 2));
 		} catch (err) {
-			logger.log("Error writing profile to file");
+			logger.log(`Error writing profile to file: ${err}`);
 		}
 		
 		// Update frontend
 		socket.emit('v4l2 cameras', {
 			"cameras": _cameras,
-			"activeFormat": _activeFormat,
 			"profiles": _profiles,
 			"activeProfile": data
 		});
@@ -988,7 +958,6 @@ io.on('connection', function(socket) {
 		// Update frontend
 		socket.emit('v4l2 cameras', {
 			"cameras": _cameras,
-			"activeFormat": _activeFormat,
 			"profiles": _profiles
 		});
 	});
@@ -1013,7 +982,7 @@ io.on('connection', function(socket) {
 	}
 	*/
 	socket.on('load v4l2 profile', function(data) {
-		logger.log("load v4l2 profile", data);
+		logger.log("load v4l2 profile", data, _profiles);
 		
 		var profile = _profiles[data];
 		
@@ -1023,21 +992,58 @@ io.on('connection', function(socket) {
 		}
 		
 		try {
-			////// Set format, restart camera ////////
+			////// Set v4l2 controls //////
 			_cameras.forEach(function(camera) {
 				if (camera.device == profile.device) {
-					camera.activeFormat = { 
-							"format": profile.format,
-							"width": profile.width,
-							"height": profile.height,
-							"denominator": profile.frameRate
+					for (var control in profile.controls) {
+						try {
+							logger.log("setting control", profile.controls[control].name, profile.controls[control].value);
+							camera.controlSet(control, profile.controls[control].value);
+							camera.controls.forEach(function(ctrl) {
+								if (ctrl.id == control.id) {
+									ctrl.value = profile.controls[control].value;
 					}
-					
+							});
+						} catch (err) {
+							logger.log("error setting control", err);
+						}
+					}
 				}
-			})
+			});
+					
+			// Read back current values
+			_cameras.forEach(function(cam) {
+				// TODO put this in driver layer
+				cam.controls.forEach(function(control) {
+					if (control.type != "class") {
+						logger.log("getting control:", control.name, control.type);
+						try {
+							control.value = cam.controlGet(control.id);
+						} catch(err) {
+							logger.log("error getting control", err);
+				}
+					}
+				});
+			});
+
+			// Save current settings
+			fs.writeFile(camera_settings_path, JSON.stringify(_cameras, null, 2), function(err) {
+				if(err) {
+					logger.log(err);
+				}
+				logger.log("The file was saved!", camera_settings_path);
+			});
 		} catch(err) {
-			logger.log("Error setting v4l2 format:", err);
+			logger.log("Error setting v4l2 controls:", err);
 		}
+
+		////// Update frontend //////
+
+		socket.emit('v4l2 cameras', {
+			"cameras": _cameras,
+			"profiles": _profiles,
+			"activeProfile": data
+		});
 	});
 
 	// used in routing setup
