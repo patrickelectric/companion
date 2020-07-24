@@ -15,7 +15,7 @@
 				"h264parse",
 				"queue",
 				"rtph264pay config-interval=10 pt=96",
-				"multiudpsink clients=${clients}"
+				"multiudpsink clients=${clients} sync=false async=false"
 			],
 			"endpoint_prefix": 'udp://',
 		},
@@ -23,6 +23,8 @@
 			"pipeline_elements": [
 				"v4l2src device=${camera}",
 				"video/x-h264,width=${width},height=${height},framerate=${framerate}/1,type=video",
+				"h264parse",
+				"queue",
 				"rtph264pay name=pay0"
 			],
 			"endpoint_prefix": 'rtsp://',
